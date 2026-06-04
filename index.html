@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LPU INT245: Penetration Testing Exam Simulator</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --success: #27ae60;
+            --error: #c0392b;
+            --info: #2980b9;
+            --background: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #333333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        header h1 { margin: 0; font-size: 2.2rem; letter-spacing: 1px; }
+        header p { margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 1.1rem; }
+        
+        .container {
+            max-width: 950px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Report Card Dashboard */
+        .report-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.8rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 2.5rem;
+            border: 3px solid var(--primary);
+            position: sticky;
+            top: 15px;
+            z-index: 100;
+        }
+        .report-card h2 {
+            margin-top: 0;
+            color: var(--primary);
+            border-bottom: 2px solid #eaeded;
+            padding-bottom: 0.6rem;
+            font-size: 1.5rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1.2rem;
+            text-align: center;
+            margin-top: 1.2rem;
+        }
+        .metric-box {
+            padding: 1rem;
+            background: #f1f2f6;
+            border-radius: 8px;
+            font-weight: 700;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .metric-box .value {
+            font-size: 1.8rem;
+            display: block;
+            margin-top: 0.3rem;
+        }
+        .metric-box.score { color: var(--info); border-bottom: 5px solid var(--info); }
+        .metric-box.correct-cnt { color: var(--success); border-bottom: 5px solid var(--success); }
+        .metric-box.wrong-cnt { color: var(--error); border-bottom: 5px solid var(--error); }
+        .metric-box.accuracy { color: #f39c12; border-bottom: 5px solid #f39c12; }
+        .metric-box.progress { color: #7f8c8d; border-bottom: 5px solid #7f8c8d; }
+
+        .question-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 1.8rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+            border-left: 6px solid #bdc3c7;
+            transition: all 0.25s ease;
+        }
+        .question-card.correct { border-left-color: var(--success); }
+        .question-card.wrong { border-left-color: var(--error); }
+        
+        .question-num {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            margin-bottom: 0.6rem;
+            border-bottom: 1px dashed #e2e8f0;
+            padding-bottom: 0.4rem;
+        }
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            color: #2c3e50;
+        }
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .option-item {
+            margin-bottom: 0.9rem;
+        }
+        .option-btn {
+            width: 100%;
+            text-align: left;
+            padding: 0.9rem 1.2rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dcdde1;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            color: #2f3542;
+        }
+        .option-btn:hover:not(:disabled) {
+            background-color: #e4e7eb;
+            border-color: #a5b1c2;
+        }
+        .option-btn:disabled { cursor: not-allowed; }
+        
+        .option-btn.selected-correct {
+            background-color: #d4edda !important;
+            border-color: var(--success) !important;
+            color: #155724;
+            font-weight: 700;
+        }
+        .option-btn.selected-wrong {
+            background-color: #f8d7da !important;
+            border-color: var(--error) !important;
+            color: #721c24;
+        }
+        .option-btn.show-correct {
+            background-color: #d4edda !important;
+            border-color: var(--success) !important;
+            color: #155724;
+        }
+        
+        /* Masterclass Detailed Explanation Box */
+        .explanation-box {
+            margin-top: 1.5rem;
+            padding: 1.2rem;
+            background-color: #fdfefe;
+            border-radius: 6px;
+            border: 1px solid #dcdde1;
+            border-top: 4px solid var(--secondary);
+            display: none;
+        }
+        .explanation-box h4 { 
+            margin: 0 0 0.8rem 0; 
+            color: var(--primary); 
+            font-size: 1.1rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.3rem;
+        }
+        .explanation-section {
+            margin-bottom: 0.8rem;
+            font-size: 0.98rem;
+        }
+        .explanation-section strong {
+            color: #2c3e50;
+        }
+        .explanation-box ul {
+            margin: 0.4rem 0 0 0;
+            padding-left: 1.3rem;
+        }
+        .explanation-box li {
+            margin-bottom: 0.4rem;
+            font-size: 0.93rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>LPU INT245: PENETRATION TESTING</h1>
+    <p>Official Model Paper Self-Assessment Simulator (No Negative Marking Edition)</p>
+</header>
+
+<div class="container">
+    
+    <div class="report-card">
+        <h2>📊 PERFORMANCE REPORT CARD</h2>
+        <div class="metrics-grid">
+            <div class="metric-box progress">
+                Progress
+                <span class="value" id="card-progress">0 / 60</span>
+            </div>
+            <div class="metric-box correct-cnt">
+                Correct
+                <span class="value" id="card-correct">0</span>
+            </div>
+            <div class="metric-box wrong-cnt">
+                Incorrect
+                <span class="value" id="card-wrong">0</span>
+            </div>
+            <div class="metric-box score">
+                Total Score
+                <span class="value" id="card-score">0 / 60</span>
+            </div>
+            <div class="metric-box accuracy">
+                Accuracy
+                <span class="value" id="card-accuracy">0%</span>
+            </div>
+        </div>
+        <p style="margin: 1rem 0 0 0; font-size: 0.85rem; text-align: center; color: #7f8c8d; font-style: italic;">
+            * Rules Configuration: +1 Mark for Correct Answer | 0 Marks for Wrong Answer (Negative Marking Disabled).
+        </p>
+    </div>
+
+    <div id="quiz-container"></div>
+</div>
+
+<script>
+const questionsData = [
+    {
+        num: 1,
+        text: "You need to capture packets on a wired network during the information gathering phase of a gray box penetration test. Which utilities could you use on your laptop to accomplish this?",
+        options: { a: "wireshark", b: "nmap", c: "Zenmap", d: "aircrack-ng" },
+        correct: "a",
+        co_rbt: "CO2, L2",
+        exp: {
+            correct: "Wireshark is a dedicated network packet analyzer. It sets the local network interface card into promiscuous mode, allowing it to capture, decode, and log raw packet streams traveling across a wired network.",
+            others: [
+                "<b>(b) nmap:</b> An active port scanner designed to send specialized network probes to discover hosts and open ports, not capture raw operational traffic streams.",
+                "<b>(c) Zenmap:</b> Simply the graphical user interface (GUI) front-end wrapper for Nmap; it shares identical functionality and cannot function as a packet sniffer.",
+                "<b>(d) aircrack-ng:</b> An offensive security suite engineered specifically for 802.11 wireless networks (WEP/WPA cracking), not raw captures over physical wired Ethernet lines."
+            ]
+        }
+    },
+    {
+        num: 2,
+        text: "Charlie runs an Nmap scan of the 10.10.0.0/16 network that his employer uses as an internal network range for the entire organization. If he uses the -T0 flag, what issue is he likely to encounter?",
+        options: { a: "The scan will terminate when the host count reaches 0", b: "The scan will not scan IP addresses in the .0 network", c: "The scan will progress at a very slow speed", d: "The scan will only scan for TCP services" },
+        correct: "c",
+        co_rbt: "CO3, L3",
+        exp: {
+            correct: "The `-T0` flag sets the Nmap timing template to 'Paranoid'. To heavily evade Intrusion Detection Systems (IDS), it serializes all packets and forces a strict 5-minute wait time between every single probe, making a /16 network sweep take an impossibly long time to finish.",
+            others: [
+                "<b>(a) The scan will terminate...:</b> Host count exhaustion does not alter Nmap's operational state logic; it simply scans until the defined scope is completed.",
+                "<b>(b) The scan will not scan IP addresses...:</b> Nmap scans all mathematically valid hosts within CIDR notation regardless of timing flags.",
+                "<b>(d) The scan will only scan for TCP services:</b> Timing flags control exclusively intervals and timeouts, not the underlying scanned protocol (which is dictated by `-sS`, `-sU`, etc.)."
+            ]
+        }
+    },
+    {
+        num: 3,
+        text: "Why a penetration tester usually avoid using utilities such as Telnet, rlogin, and rsh when conducting a penetration test?",
+        options: { a: "They transfer data slowly", b: "They provide only a command-line interface", c: "They transmit data as clear text over the network", d: "They are no longer supported by modern operating systems" },
+        correct: "c",
+        co_rbt: "CO4, L3",
+        exp: {
+            correct: "Telnet, rlogin, and rsh are legacy remote access utilities that lack any form of cryptographic protection. All operational commands, data payloads, and administrative login credentials are transmitted across the network wire in absolute clear text, exposed to simple packet sniffing.",
+            others: [
+                "<b>(a) They transfer data slowly:</b> These tools are text-based and remarkably fast due to the absence of heavy cryptographic encryption overhead.",
+                "<b>(b) They provide only a command-line interface:</b> Penetration testers heavily favor command-line interfaces for speed, automation, and scriptability.",
+                "<b>(d) They are no longer supported...:</b> While deprecated, these services are frequently left enabled on legacy routers, enterprise switches, and industrial IoT controls."
+            ]
+        }
+    },
+    {
+        num: 4,
+        text: "Which one of the following security assessment tools is not commonly used during the Information Gathering and Vulnerability Identification phase of a penetration test?",
+        options: { a: "Nmap", b: "Nessus", c: "Metasploit", d: "Denial" },
+        correct: "c",
+        co_rbt: "Indicative Mapping Only",
+        exp: {
+            correct: "Metasploit is fundamentally an exploitation and post-exploitation ecosystem. It is utilized after vulnerabilities have already been mapped, allowing testers to deliver functional payloads, bypass access parameters, or elevate privileges.",
+            others: [
+                "<b>(a) Nmap:</b> The foundational industry standard for active reconnaissance, port discovery, and host network configuration mapping.",
+                "<b>(b) Nessus:</b> A robust vulnerability assessment engine dedicated purely to scanning endpoints, identifying missing patches, and listing system flaws.",
+                "<b>(d) Denial:</b> Generally treated as a distractor option here, but in security architecture contexts, Denial (such as DoS evaluation) represents a category of testing rather than an exploitation platform."
+            ]
+        }
+    },
+    {
+        num: 5,
+        text: "Recall the information provided by recon-ng out of the following.",
+        options: { a: "Social media profiles of target", b: "Email addresses of employees associated with target organization", c: "Sub domains associated with target", d: "All of the above" },
+        correct: "d",
+        co_rbt: "CO1, L1",
+        exp: {
+            correct: "Recon-ng is an advanced modular Open-Source Intelligence (OSINT) framework. It functions via community modules designed to interface with open APIs and scraping patterns to pull domains, user contacts, employee emails, and target social profiles systematically into a structured database.",
+            others: [
+                "<b>(a), (b), and (c):</b> Each represents a correct capability on its own. Because Recon-ng aggregates all of these disparate OSINT capabilities into separate individual modules, 'All of the above' is the accurate holistic choice."
+            ]
+        }
+    },
+    {
+        num: 6,
+        text: "A hacker discovers a system running an outdated version of SMB and successfully exploits it to gain SYSTEM privileges. What attack is being used?",
+        options: { a: "EternalBlue", b: "Pass-the-Hash", c: "Man-in-the-Middle", d: "Buffer Overflow" },
+        correct: "a",
+        co_rbt: "CO5, L3",
+        exp: {
+            correct: "EternalBlue (MS17-010) is a specific, historic exploit developed by the NSA that weaponizes memory corruption vulnerabilities within Microsoft's Server Message Block v1 (SMBv1) protocol, granting unauthenticated remote execution with local `NT AUTHORITY\\SYSTEM` privileges.",
+            others: [
+                "<b>(b) Pass-the-Hash:</b> A post-exploitation lateral movement technique where an attacker authenticates to remote resources using captured NTLM password hashes without ever cracking the plaintext password.",
+                "<b>(c) Man-in-the-Middle:</b> An interception tactic where an attacker places themselves between two communicating endpoints to read or alter passing data streams.",
+                "<b>(d) Buffer Overflow:</b> While a buffer overflow is the underlying flaw that makes EternalBlue possible, 'EternalBlue' is the direct and complete name of the precise, specific multi-layered SMB exploit chain described."
+            ]
+        }
+    },
+    {
+        num: 7,
+        text: "Which section of a written report of penetration test findings is intended to be read by less-technical audiences?",
+        options: { a: "Executive summary", b: "Methodology", c: "Findings and remediation", d: "Metrics and measures" },
+        correct: "a",
+        co_rbt: "CO6, L4",
+        exp: {
+            correct: "The Executive Summary abstracts dense technological jargon into business risks. It highlights high-level impacts, organizational exposure, regulatory compliance gaps, and strategic cost trajectories designed for corporate leadership and C-level executives.",
+            others: [
+                "<b>(b) Methodology:</b> Explains the framework execution boundaries (e.g., OSSTMM, PTES) used by security teams to validate findings.",
+                "<b>(c) Findings and remediation:</b> Contains highly technical exploit code parameters, reproduction payloads, and configurations required by internal sysadmins to secure the flaws.",
+                "<b>(d) Metrics and measures:</b> Offers detailed engineering statistics, score equations, and statistical tracking data across evaluated environments."
+            ]
+        }
+    },
+    {
+        num: 8,
+        text: "Which of the following is NOT a common communication trigger in penetration testing?",
+        options: { a: "Detection of suspicious network activity", b: "Completion of vulnerability scanning", c: "Changes in system configurations", d: "Routine system backups" },
+        correct: "d",
+        co_rbt: "L4",
+        exp: {
+            correct: "Routine system backups are completely automated, scheduled operational tasks managed by the internal IT infrastructure branch. They represent standard, safe operations and are not altered or triggered by a penetration test.",
+            others: [
+                "<b>(a) Detection of suspicious network activity:</b> If the client's internal Blue Team detects the tester, this triggers immediate verification communication to confirm if an active live breach is occurring.",
+                "<b>(b) Completion of vulnerability scanning:</b> A critical milestone trigger to signal to the client that high-bandwidth, disruptive automated sweeping traffic is complete.",
+                "<b>(c) Changes in system configurations:</b> Unplanned server changes or crashes require immediate engineering escalation and sync calls between stakeholders."
+            ]
+        }
+    },
+    {
+        num: 9,
+        text: "SQL injection is an attack in which ________ code is inserted into strings that are later passed to an instance of SQL Server.",
+        options: { a: "malicious", b: "clean", c: "non-malicious", d: "redundant" },
+        correct: "a",
+        co_rbt: "CO4, L3",
+        exp: {
+            correct: "SQL Injection (SQLi) functions by passing input strings containing rogue database commands or logic tokens into unsanitized database fields, allowing attackers to manipulate backend database interactions directly.",
+            others: [
+                "<b>(b) clean / (c) non-malicious:</b> These strings operate within standard design parameters and produce standard, authorized web results.",
+                "<b>(d) redundant:</b> Refers to unnecessary code syntax blocks that do not alter system logic or break validation architectures."
+            ]
+        }
+    },
+    {
+        num: 10,
+        text: "Which section of a written report of penetration test findings is intended to be read by less-technical audiences? (Duplicate Question Entry)",
+        options: { a: "Executive summary", b: "Methodology", c: "Findings and remediation", d: "Metrics and measures" },
+        correct: "a",
+        co_rbt: "CO6, L4",
+        exp: {
+            correct: "The Executive Summary abstracts complex technological vulnerabilities into clean business-centric language for non-technical stakeholders.",
+            others: [
+                "<b>(b), (c), and (d):</b> These require extensive technical domain knowledge to decipher and execute matching security controls."
+            ]
+        }
+    },
+    {
+        num: 11,
+        text: "You are performing a black box penetration test for a medium-sized organization that sells imported clothing through its online storefront. You want to query search engines and other resources to discover email addresses, employee names, and other details about the target. Which tool in your penetration testing toolkit should you use?",
+        options: { a: "nmap", b: "Shodan", c: "theHarvester", d: "Fingerprinting Organizations with Collected Archives (FOCA)" },
+        correct: "c",
+        co_rbt: "CO1, L2",
+        exp: {
+            correct: "theHarvester is a specialized OSINT tool built specifically to scour public registries, search engines, and PGP key servers to aggregate target email domains, employee lists, and subdomains.",
+            others: [
+                "<b>(a) nmap:</b> An active network scanner that targets IP blocks directly to find port states, not public directories or email naming conventions.",
+                "<b>(b) Shodan:</b> A specialized index mapping internet-exposed infrastructure hardware components, IoT banners, and open network nodes.",
+                "<b>(d) FOCA:</b> Focuses primarily on scanning document metadata structures (PDFs, DOCX) pulled from web targets to find hidden path names and system configurations."
+            ]
+        }
+    },
+    {
+        num: 12,
+        text: "Identify from the given option that relates with the vulnerability scan that can usually identify the most vulnerabilities.",
+        options: { a: "Credentialed", b: "Noncredentialed", c: "Discovery", d: "Stealth" },
+        correct: "a",
+        co_rbt: "CO4, L3",
+        exp: {
+            correct: "Credentialed scans use authorized access privileges to log directly into local operating systems, allowing deep inspection of missing patches, local system binaries, registry items, and applications.",
+            others: [
+                "<b>(b) Noncredentialed:</b> Evaluates target endpoints purely across exposed network ports from an outsider perspective, missing hidden deep system configuration flaws.",
+                "<b>(c) Discovery:</b> A lightweight structural scan whose single goal is confirming host up/down states and asset counts.",
+                "<b>(d) Stealth:</b> Minimizes packet noise or traffic bandwidth to avoid detection, heavily restricting the exhaustive validation tests it can run."
+            ]
+        }
+    },
+    {
+        num: 13,
+        text: "What is the term for gathering information using search engines?",
+        options: { a: "Deep web mining", b: "Domain crawling", c: "Brute force attacks", d: "Google hacking" },
+        correct: "d",
+        co_rbt: "CO2, L2",
+        exp: {
+            correct: "Google hacking (also known as Google Dorking) leverages specialized search operators to identify hidden data configurations, exposed database files, log arrays, and open directories.",
+            others: [
+                "<b>(a) Deep web mining:</b> Refers to unearthing unindexed, dynamically generated backend databases or hidden web configurations.",
+                "<b>(b) Domain crawling:</b> The programmatic traversal of standard hyperlinks to systematically build an application site directory.",
+                "<b>(c) Brute force attacks:</b> Running automated lists of guesses to break into credential boxes or hidden URL paths."
+            ]
+        }
+    },
+    {
+        num: 14,
+        text: "During a gray box penetration test, you run an nmap scan of a system discovered on the network. You find that TCP ports 139, 443, and 3389 are open. What operating system is most likely running on the system?",
+        options: { a: "iOS", b: "Windows", c: "Linux", d: "Android" },
+        correct: "b",
+        co_rbt: "CO1, L1",
+        exp: {
+            correct: "Port 139 hosts NetBIOS (SMB file sharing) and port 3389 hosts Remote Desktop Protocol (RDP), both of which are core components natively associated with Microsoft Windows environments.",
+            others: [
+                "<b>(c) Linux:</b> Typically depends on port 22 (SSH) for default system administration and doesn't run Windows RDP layers naturally.",
+                "<b>(a) iOS / (d) Android:</b> Mobile phone operating systems that do not native host file sharing services (139) or Remote Desktop pipelines (3389) by default."
+            ]
+        }
+    },
+    {
+        num: 15,
+        text: "A penetration tester is using Wireshark to analyze network traffic. They observe multiple TCP SYN packets being sent without receiving SYN-ACK responses. What does this most likely indicate?",
+        options: { a: "A successful TCP three-way handshake", b: "A DNS zone transfer attempt", c: "A slow HTTP request attack", d: "An active SYN flood attack" },
+        correct: "d",
+        co_rbt: "CO2, L2",
+        exp: {
+            correct: "A continuous flow of TCP SYN packets lacking corresponding server SYN-ACK responses indicates a SYN flood attack, aimed at exhausting system resources by leaving connections half-open.",
+            others: [
+                "<b>(a) A successful TCP three-way handshake:</b> Requires a complete sequence loop matching: SYN -> SYN-ACK -> ACK.",
+                "<b>(b) A DNS zone transfer attempt:</b> Utilizes TCP Port 53 configurations to migrate server lookup zones, operating with specific transactional query commands.",
+                "<b>(c) A slow HTTP request attack:</b> Operates at the Application Layer (Layer 7) by slowly sending fragmented header fields rather than focusing on baseline Layer 4 flags."
+            ]
+        }
+    },
+    {
+        num: 16,
+        text: "Which of the following is an example of a remote access tool commonly used by penetration testers to maintain access to compromised systems?",
+        options: { a: "Notepad", b: "Microsoft Word", c: "TeamViewer", d: "Calculator" },
+        correct: "c",
+        co_rbt: "L4",
+        exp: {
+            correct: "TeamViewer is a commercial remote administration software often abused by attackers as a dual-use utility to maintain reliable, interactive remote access GUI panels on compromised systems.",
+            others: [
+                "<b>(a) Notepad / (b) Microsoft Word:</b> Native local document and text formatting programs with zero structural network functionality.",
+                "<b>(d) Calculator:</b> A baseline mathematical utility program completely lacking communications engine logic."
+            ]
+        }
+    },
+    {
+        num: 17,
+        text: "What is the primary defense mechanism against privilege escalation attacks in both Windows and Linux?",
+        options: { a: "Disabling all user accounts", b: "Using antivirus software", c: "Strong passwords", d: "Frequent software updates and patches" },
+        correct: "d",
+        co_rbt: "CO5, L3",
+        exp: {
+            correct: "Most vertical privilege escalation paths exploit underlying software bugs or memory corruption vulnerabilities within OS kernels. Regular patching closes these tactical gaps entirely.",
+            others: [
+                "<b>(a) Disabling all user accounts:</b> Destroys all enterprise utility and locks down business functions completely.",
+                "<b>(b) Using antivirus software:</b> Primarily catches malware file signatures, but often fails to mitigate manual, interactive shell privilege exploits.",
+                "<b>(c) Strong passwords:</b> Crucial to protect initial authentication access points, but provides zero defense once an attacker has a local shell and exploits a kernel bug."
+            ]
+        }
+    },
+    {
+        num: 18,
+        text: "While performing a black box penetration test, you identify a significant amount of FTP data being transferred between an unknown internal host on the target network and hosts on the Internet on ports 20 and 21. How could you exploit this traffic to gain access to systems on the target network?",
+        options: { a: "Capture the FTP traffic with a sniffer.", b: "Conduct a land attack.", c: "Use anonymous FTP access to upload a keylogger to the FTP server", d: "Conduct a distributed denial-of-service (DDoS) attack." },
+        correct: "a",
+        co_rbt: "CO3, L2",
+        exp: {
+            correct: "FTP passes all session credentials and file content in unencrypted cleartext across ports 20 and 21. Sniffing this live traffic lets an attacker read valid authentication credentials directly.",
+            others: [
+                "<b>(b) Conduct a land attack:</b> A legacy Denial of Service attack that loops spoofed packets back into a target host to crash its network interface.",
+                "<b>(c) Use anonymous FTP access...:</b> Assumes a deep configuration write permissions flaw exists on the target directories, which cannot be verified by just watching traffic volume.",
+                "<b>(d) Conduct a distributed denial-of-service (DDoS) attack:</b> Destroys system availability, preventing any access or data extraction opportunities."
+            ]
+        }
+    },
+    {
+        num: 19,
+        text: "A software company has hired a penetration tester to perform a penetration test on a database server. The tester has been given a variety of tools used by the company's privacy policy. Which of the following would be the BEST to use to find vulnerabilities on this server?",
+        options: { a: "OpenVAS", b: "Nikto", c: "SQLmap", d: "Nessus" },
+        correct: "c",
+        co_rbt: "CO1, L4",
+        exp: {
+            correct: "SQLmap is an automated tool built specifically to detect and exploit SQL injection vulnerabilities and hijack database engine backend servers.",
+            others: [
+                "<b>(a) OpenVAS / (d) Nessus:</b> General-purpose network scanners built to find missing patches, but they lack deep specialization for advanced database query extraction testing.",
+                "<b>(b) Nikto:</b> A web server assessment utility that looks for dangerous files and outdated software banners on front-facing web servers, not deep database queries."
+            ]
+        }
+    },
+    {
+        num: 20,
+        text: "Which of the following is the process of adjusting the final rating of vulnerabilities to the client needs?",
+        options: { a: "Risk assessment", b: "Risk prioritization", c: "Risk mitigation", d: "None of the above" },
+        correct: "b",
+        co_rbt: "CO1, L4",
+        exp: {
+            correct: "Risk prioritization involves analyzing generalized scanner severity scores (like CVSS) and re-ranking them based on the specific business impact, asset value, and data context of the client's environment.",
+            others: [
+                "<b>(a) Risk assessment:</b> The overarching procedural framework used to map out the threat landscape, not just fine-tune localized severity metrics.",
+                "<b>(c) Risk mitigation:</b> The physical implementation of technical safeguards (such as applying patches) to reduce risk."
+            ]
+        }
+    },
+    {
+        num: 21,
+        text: "What is the purpose of social engineering?",
+        options: { a: "Gain information from a computer through networking and other tools", b: "Gain information from the web looking for employee names", c: "Gain information from a job site using a careful eye", d: "Gain information from a human being through face-to-face or electronic means" },
+        correct: "d",
+        co_rbt: "CO1, L4",
+        exp: {
+            correct: "Social engineering targets the human element, manipulation, and psychological triggers to convince people to hand over secrets or perform actions that breach security protocols.",
+            others: [
+                "<b>(a) Gain information from a computer...:</b> This defines traditional technical hacking operations.",
+                "<b>(b) Gain information from the web...:</b> This falls under open-source intelligence collection (OSINT).",
+                "<b>(c) Gain information from a job site...:</b> A narrow, passive research activity that does not involve interacting with or manipulating people."
+            ]
+        }
+    },
+    {
+        num: 22,
+        text: "Nmap is required to perform what type of scan?",
+        options: { a: "Port scan", b: "Server scan", c: "Service scan", d: "Threat scan" },
+        correct: "a",
+        co_rbt: "CO1, L1",
+        exp: {
+            correct: "Nmap's primary architectural purpose is port scanning—discovering open raw ports on target hosts by evaluating Layer 4 protocol behaviors.",
+            others: [
+                "<b>(b), (c), and (d):</b> While Nmap can fingerpint services or check for basic vulnerabilities with scripts, these are secondary modules built on top of its core, foundational job: port scanning."
+            ]
+        }
+    },
+    {
+        num: 23,
+        text: "What is the primary benefit of evaluating wireless network traffic?",
+        options: { a: "To reduce the cost of network infrastructure", b: "To enhance network aesthetics", c: "To increase the complexity of network configurations", d: "To improve network performance and security" },
+        correct: "d",
+        co_rbt: "CO1, L2",
+        exp: {
+            correct: "Analyzing wireless traffic allows administrators to catch rogue access points, isolate optimization dead-zones, check encryption standards, and find misconfigured connected hardware.",
+            others: [
+                "<b>(a) To reduce the cost...:</b> Monitoring wireless packets doesn't alter hardware procurement costs or vendor pricing.",
+                "<b>(b) To enhance network aesthetics:</b> Wireless traffic consists of invisible radio waves and has zero effect on visual office aesthetics.",
+                "<b>(c) To increase the complexity...:</b> Increasing complexity is a poor design practice and is never a goal for a network administrator."
+            ]
+        }
+    },
+    {
+        num: 24,
+        text: "During a penetration test, which tool is used for sniffing and analyzing network packets?",
+        options: { a: "Aircrack-ng", b: "Wireshark", c: "Metasploit", d: "Nessus" },
+        correct: "b",
+        co_rbt: "CO2, L2",
+        exp: {
+            correct: "Wireshark is an industry-standard graphical packet sniffer that decodes network encapsulation layers in real time.",
+            others: [
+                "<b>(a) Aircrack-ng:</b> A specialized suite targeted specifically for wireless network cracking, not general packet decoding.",
+                "<b>(c) Metasploit:</b> An active exploitation platform designed to execute payloads, not monitor networks.",
+                "<b>(d) Nessus:</b> An automated vulnerability assessment scanner that checks for missing updates, not a real-time traffic sniffer."
+            ]
+        }
+    },
+    {
+        num: 25,
+        text: "What is the purpose of ARP in networking?",
+        options: { a: "To translate domain names into IP addresses", b: "To establish secure connections", c: "To map MAC addresses to IP addresses", d: "To analyze network traffic" },
+        correct: "c",
+        co_rbt: "CO2, L3",
+        exp: {
+            correct: "Address Resolution Protocol (ARP) resolves Layer 3 IP addresses into Layer 2 physical MAC addresses to facilitate data delivery over local networks.",
+            others: [
+                "<b>(a) To translate domain names...:</b> This is managed entirely by Domain Name System (DNS) servers.",
+                "<b>(b) To establish secure connections:</b> Handled by security protocols like TLS/SSL or IPsec.",
+                "<b>(d) To analyze network traffic:</b> This is the job of specialized monitoring systems and packet sniffers like Wireshark."
+            ]
+        }
+    },
+    {
+        num: 26,
+        text: "Find the wrong statement about penetration testing?",
+        options: { a: "It is an unintentional attack", b: "Pen-testing is used for security assessment", c: "Pen testing improves the security of the system", d: "Pen testing does discovers security weaknesses" },
+        correct: "a",
+        co_rbt: "CO2, L3",
+        exp: {
+            correct: "Penetration testing is never unintentional. It is a highly planned, authorized, and structured simulation of real-world attacks.",
+            others: [
+                "<b>(b), (c), and (d):</b> These are all perfectly true statements that accurately describe the purpose, outcomes, and value of conducting a professional penetration test."
+            ]
+        }
+    },
+    {
+        num: 27,
+        text: "In which part of the report should the tester include the additional information such as tools and exploits, snapshots, log output, risk assessment methodologies and vulnerabilities classification to give organization a clear understanding of the penetration testing report.",
+        options: { a: "Appendixes", b: "Executive summary", c: "Main body", d: "Technical summary" },
+        correct: "a",
+        co_rbt: "CO6, L4",
+        exp: {
+            correct: "The Appendix contains supplementary material like raw logs, script outputs, and full tool syntax. This keeps the main report readable while still providing all the technical proof.",
+            others: [
+                "<b>(b) Executive summary:</b> A short, non-technical business overview designed specifically for managers and leadership.",
+                "<b>(c) Main body:</b> Houses the primary core narratives of how exploits were accomplished, without being cluttered by pages of raw terminal outputs.",
+                "<b>(d) Technical summary:</b> A concise engineering overview summarizing the high-level findings for IT administrators."
+            ]
+        }
+    },
+    {
+        num: 28,
+        text: "Identify the term which denotes that only authorized users are capable of accessing the information?",
+        options: { a: "Confidentiality", b: "Availability", c: "Integrity", d: "None of the above" },
+        correct: "a",
+        co_rbt: "CO1, L3",
+        exp: {
+            correct: "Confidentiality ensures that sensitive data is protected from unauthorized access or exposure.",
+            others: [
+                "<b>(b) Availability:</b> Guarantees that systems and data remain operational and accessible to authorized users whenever they need them.",
+                "<b>(c) Integrity:</b> Ensures that data remains accurate and has not been altered or tampered with by unauthorized parties."
+            ]
+        }
+    },
+    {
+        num: 29,
+        text: "Which network scanning technique uses specially crafted packets to bypass firewall rules and detect open ports?",
+        options: { a: "UDP scanning", b: "SYN scanning", c: "ACK scanning", d: "FIN scanning" },
+        correct: "d",
+        co_rbt: "CO2, L2",
+        exp: {
+            correct: "FIN scanning sends an unexpected FIN packet to a target port without a formal connection. Stateful firewalls or filters looking for standard connection flows can sometimes be bypassed by this technique.",
+            others: [
+                "<b>(a) UDP scanning:</b> Very slow and relies on catching ICMP port unreachable replies, easily filtered by firewalls.",
+                "<b>(b) SYN scanning:</b> The standard 'stealth' method, but heavily monitored and logged by almost all modern firewalls.",
+                "<b>(c) ACK scanning:</b> Used purely to map out firewall rulesets and filter mechanics, it cannot identify whether a port is explicitly open or closed."
+            ]
+        }
+    },
+    {
+        num: 30,
+        text: "After a penetration test is complete what should you do when you are conducting the post-engagement cleanup process.",
+        options: { a: "Remove any tools or utilities you installed during the test", b: "Reset all administrative credentials to their default values", c: "Reset all firewalls to the default configurations", d: "Reinstall" },
+        correct: "a",
+        co_rbt: "CO6, L4",
+        exp: {
+            correct: "Post-engagement cleanup requires removing backdoors, user accounts, scripts, and temporary binaries to return the network to its original secure state.",
+            others: [
+                "<b>(b) Reset administrative credentials to defaults:</b> Leaving default passwords active creates a massive, catastrophic security vulnerability for the organization.",
+                "<b>(c) Reset firewalls to default:</b> Wipes out all production rules, which completely disrupts business traffic and exposes internal assets.",
+                "<b>(d) Reinstall:</b> A vague distractor option that does not describe a professional, structured cleanup step."
+            ]
+        }
+    },
+    {
+        num: 31,
+        text: "When enumerating users and assets in a penetration test, what is the goal?",
+        options: { a: "To create backups of important files", b: "To prioritize users based on their roles and privileges", c: "To identify potential targets for exploitation", d: "To monitor network traffic for suspicious activity" },
+        correct: "c",
+        co_rbt: "L6",
+        exp: {
+            correct: "The goal of active enumeration is to map out active users, services, software versions, and open shares to locate the weakest links for exploitation.",
+            others: [
+                "<b>(a) To create backups...:</b> This is a routine data maintenance task managed by system administrators, not attackers.",
+                "<b>(b) To prioritize users...:</b> While mapping privileges helps, the primary offensive goal is discovering specific vulnerable entry points.",
+                "<b>(d) To monitor network traffic...:</b> This is a defensive job handled by security teams using SIEMs and IDS platforms."
+            ]
+        }
+    },
+    {
+        num: 32,
+        text: "What is the primary goal of fingerprinting a server during a penetration test?",
+        options: { a: "Identifying the server's physical location", b: "Determining the server's operating system and software versions", c: "Cracking the server's passwords", d: "Mapping the network topology" },
+        correct: "b",
+        co_rbt: "CO1, L1",
+        exp: {
+            correct: "Banner grabbing and OS fingerprinting help identify the exact operating system version and application versions running on a server, allowing testers to look up matching public exploits.",
+            others: [
+                "<b>(a) Identifying physical location:</b> Geolocation is useful but does not provide the technical details needed to execute a software exploit.",
+                "<b>(c) Cracking passwords:</b> This happens later during active brute-forcing or credential stuffing phases, after the target service is identified.",
+                "<b>(d) Mapping network topology:</b> This maps how routers and switches connect, rather than detailing individual service application settings."
+            ]
+        }
+    },
+    {
+        num: 33,
+        text: "What is the term for malware that is designed to take control of a computer and use it for malicious purposes?",
+        options: { a: "Spyware", b: "Ransomware", c: "Trojan", d: "Botnet" },
+        correct: "d",
+        co_rbt: "CO4, L3",
+        exp: {
+            correct: "A botnet consists of compromised systems ('bots' or 'zombies') controlled remotely by a central attacker to launch coordinated actions like DDoS attacks.",
+            others: [
+                "<b>(a) Spyware:</b> Malicious software focused entirely on logging typing inputs and stealing secret credentials silently.",
+                "<b>(b) Ransomware:</b> Encryption malware built to lock up system files and demand cryptocurrency payments.",
+                "<b>(c) Trojan:</b> A piece of malware that misleads users by hiding inside an innocent-looking program file."
+            ]
+        }
+    },
+    {
+        num: 34,
+        text: "Which of the following web application vulnerabilities involves an attacker injecting malicious scripts into web pages viewed by other users?",
+        options: { a: "Cross-Site Scripting (XSS)", b: "Cross-Site Request Forgery (CSRF)", c: "SQL Injection", d: "Directory Traversal" },
+        correct: "a",
+        co_rbt: "CO1, L2",
+        exp: {
+            correct: "Cross-Site Scripting (XSS) occurs when a web application safely renders raw, un-sanitized JavaScript inputs, causing malicious code to execute inside a victim's browser context.",
+            others: [
+                "<b>(b) Cross-Site Request Forgery (CSRF):</b> Forces an authenticated user's browser to send unauthorized commands to a target web app.",
+                "<b>(c) SQL Injection:</b> Targets backend database entry strings to alter database tables, not user browser sessions.",
+                "<b>(d) Directory Traversal:</b> An attack that lets an attacker read private files directly from the server's local operating system folders."
+            ]
+        }
+    },
+    {
+        num: 35,
+        text: "This utility shows the path taken by an ICMP request as it traverses the network to its dedicated destination.",
+        options: { a: "tracert", b: "nslookup", c: "shodan", d: "netstat" },
+        correct: "a",
+        co_rbt: "CO4, L3",
+        exp: {
+            correct: "`tracert` (Windows) or `traceroute` (Linux) uses ICMP Echo Requests with incremental TTL values to discover every router hop along the path to a destination IP.",
+            others: [
+                "<b>(b) nslookup:</b> Used specifically to test name servers and verify domain resolution entries.",
+                "<b>(c) shodan:</b> A public search engine indexing connected physical infrastructure nodes and open ports.",
+                "<b>(d) netstat:</b> Displays active local network socket connections, listening interfaces, and local routing rules."
+            ]
+        }
+    },
+    {
+        num: 36,
+        text: "Which of the following best describes a method to mitigate security risks when using public code repositories?",
+        options: { a: "Sharing repository credentials openly", b: "Allowing anonymous access to repositories", c: "Regularly reviewing and removing sensitive information", d: "Using outdated software versions" },
+        correct: "c",
+        co_rbt: "L4",
+        exp: {
+            correct: "Regularly auditing code repositories ensures that hardcoded credentials, private API keys, and internal configurations are not accidentally exposed to the public.",
+            others: [
+                "<b>(a) Sharing repository credentials / (b) Allowing anonymous access:</b> Both actions compromise safety and leak internal code visibility.",
+                "<b>(d) Using outdated software versions:</b> Leaves older, known security vulnerabilities active in your application codebase."
+            ]
+        }
+    },
+    {
+        num: 37,
+        text: "Which of the following is an active reconnaissance technique?",
+        options: { a: "DNS lookup", b: "WHOIS query", c: "Port scanning", d: "Google dorking" },
+        correct: "c",
+        co_rbt: "CO2, L2",
+        exp: {
+            correct: "Port scanning requires sending packets directly to the target system's ports, making direct contact that can be logged by security systems.",
+            others: [
+                "<b>(a) DNS lookup / (b) WHOIS query:</b> Interrogates public internet infrastructure registries instead of touching the target network directly.",
+                "<b>(d) Google dorking:</b> Queries Google's indexed cache databases, keeping the entire reconnaissance phase completely passive."
+            ]
+        }
+    },
+    {
+        num: 38,
+        text: "Which of the following is an example of a network-based vulnerability scanner?",
+        options: { a: "Nessus", b: "Wireshark", c: "Nikto", d: "Metasploit" },
+        correct: "a",
+        co_rbt: "CO2, L1",
+        exp: {
+            correct: "Nessus is an industry-standard network vulnerability scanner that checks remote systems for missing patches and security misconfigurations.",
+            others: [
+                "<b>(b) Wireshark:</b> A raw network packet capture engine with zero vulnerability tracking capabilities.",
+                "<b>(c) Nikto:</b> A dedicated command-line tool built exclusively to scan web servers, not whole network layouts.",
+                "<b>(d) Metasploit:</b> An exploitation framework used to execute code payloads, not run vulnerability scans."
+            ]
+        }
+    },
+    {
+        num: 39,
+        text: "Which of the following are ways to conduct penetration testing?",
+        options: { a: "Black BoxTesting, RedBox Testing, Grey Box Testing", b: "White Box Testing, Brown BoxTesting, RedBox Testing", c: "Black Box Testing, White Box Testing, Grey Box Testing", d: "Black BoxTesting, GreenBox Testing, White BoxTesting" },
+        correct: "c",
+        co_rbt: "CO1, L2",
+        exp: {
+            correct: "The three standard penetration testing methodologies are Black Box (zero prior knowledge), White Box (full knowledge and documentation), and Grey Box (partial knowledge).",
+            others: [
+                "<b>(a), (b), and (d):</b> Use made-up terms like RedBox, BrownBox, or GreenBox testing, which are completely invalid in professional security testing frameworks."
+            ]
+        }
+    },
+    {
+        num: 40,
+        text: "Which command option causes nmap to detect services running on a target host and report the version number of any services found?",
+        options: { a: "-sS", b: "-sV", c: "-sT", d: "-sU" },
+        correct: "b",
+        co_rbt: "CO1, L3",
+        exp: {
+            correct: "The `-sV` flag tells Nmap to communicate with open ports using specific probes to capture banners and determine the exact service name and version number.",
+            others: [
+                "<b>(a) -sS:</b> Executes a stealthy SYN 'half-open' scan to find out if ports are open.",
+                "<b>(c) -sT:</b> Launches a full 3-way TCP Connect handshake scan across target hosts.",
+                "<b>(d) -sU:</b> Sweeps for stateless UDP port services, looking for ICMP errors."
+            ]
+        }
+    },
+    {
+        num: 41,
+        text: "What type of scan sends packets to a target system and examines responses to determine open ports?",
+        options: { a: "TCP SYN Scan", b: "UDP Scan", c: "ICMP Echo Scan", d: "HTTP Scan" },
+        correct: "a",
+        co_rbt: "CO3, L3",
+        exp: {
+            correct: "A TCP SYN scan sends a SYN packet to target ports and analyzes the response flags (like a SYN-ACK for open or RST for closed) to determine port status.",
+            others: [
+                "<b>(b) UDP Scan:</b> Targets connectionless services and determines states based on missing ICMP responses rather than tracking connection flags.",
+                "<b>(c) ICMP Echo Scan:</b> A basic ping option used to check if a host is online, it cannot look at individual port services.",
+                "<b>(d) HTTP Scan:</b> Evaluates higher application-layer parameters (Layer 7) rather than core transport-layer port states."
+            ]
+        }
+    },
+    {
+        num: 42,
+        text: "Which of the following attacks require obtaining access to a regular user account with different access or permissions than the one currently in use?",
+        options: { a: "Cross site scripting", b: "Horizontal privilege escalation", c: "Broken authentication", d: "None of the above" },
+        correct: "b",
+        co_rbt: "CO1, L2",
+        exp: {
+            correct: "Horizontal privilege escalation occurs when an attacker accesses a different user account that shares the same privilege level as their current account.",
+            others: [
+                "<b>(a) Cross site scripting:</b> Injects client-side scripts to compromise individual browser cookies.",
+                "<b>(c) Broken authentication:</b> Exploits weak login or session systems to steal identities or session cookies directly."
+            ]
+        }
+    },
+    {
+        num: 43,
+        text: "What technique can an attacker use to perform session hijacking on a web application?",
+        options: { a: "Brute-forcing passwords", b: "Spoofing MAC addresses", c: "Cracking WPS codes", d: "Stealing session cookies" },
+        correct: "d",
+        co_rbt: "CO5, L2",
+        exp: {
+            correct: "Web applications use session cookies to verify logged-in users. If an attacker steals this cookie, they can clone it into their own browser to hijack the active session without needing credentials.",
+            others: [
+                "<b>(a) Brute-forcing passwords:</b> Used to find initial plaintext credentials, not steal active sessions.",
+                "<b>(b) Spoofing MAC addresses:</b> Targets local Layer 2 network routing, not application-layer sessions.",
+                "<b>(c) Cracking WPS codes:</b> Used to hack into Wi-Fi routers, completely unrelated to web application cookies."
+            ]
+        }
+    },
+    {
+        num: 44,
+        text: "Which of the following is NOT a common audience for penetration testing reports?",
+        options: { a: "Board of Directors", b: "IT administrators", c: "General public", d: "Legal counsel" },
+        correct: "c",
+        co_rbt: "L1",
+        exp: {
+            correct: "Penetration testing reports contain highly confidential exploit steps and systemic vulnerability blueprints, meaning they should never be shared with the general public.",
+            others: [
+                "<b>(a) Board of Directors:</b> Needs high-level threat overviews to manage security spending and risk strategy.",
+                "<b>(b) IT administrators:</b> Require the full technical findings to apply security updates and patches.",
+                "<b>(d) Legal counsel:</b> Must evaluate corporate liabilities and compliance requirements based on findings."
+            ]
+        }
+    },
+    {
+        num: 45,
+        text: "Which of the following is the best approach to conducting a penetration test?",
+        options: { a: "Black box testing", b: "White box testing", c: "Grey box testing", d: "Automated testing" },
+        correct: "c",
+        co_rbt: "CO1, L2",
+        exp: {
+            correct: "Grey box testing balances efficiency and realism, providing testers with limited system details to save reconnaissance time while still identifying internal flaws accurately.",
+            others: [
+                "<b>(a) Black box testing:</b> Mimics an outside hacker but wastes expensive testing hours trying to discover basic network layouts.",
+                "<b>(b) White box testing:</b> Provides complete documentation, but testers can suffer from confirmation bias instead of looking at things like an outsider.",
+                "<b>(d) Automated testing:</b> Misses complex business logic flaws and multi-stage exploit paths that a human tester can spot."
+            ]
+        }
+    },
+    {
+        num: 46,
+        text: "This type of agreement defines the expectations for a specific business arrangement.",
+        options: { a: "MSA", b: "SOW", c: "SLA", d: "NDA" },
+        correct: "b",
+        co_rbt: "CO1, L4",
+        exp: {
+            correct: "A Statement of Work (SOW) defines the explicit scope, timelines, deliverables, and operational boundaries of a specific testing assignment.",
+            others: [
+                "<b>(a) MSA:</b> A Master Services Agreement that establishes long-term generic legal terms across multiple future projects.",
+                "<b>(c) SLA:</b> A Service Level Agreement that outlines explicit performance metrics like server uptime guarantees.",
+                "<b>(d) NDA:</b> A Non-Disclosure Agreement built purely to protect secret business data from being leaked."
+            ]
+        }
+    },
+    {
+        num: 47,
+        text: "In the context of web security, why is it important to educate users about potential risks, such as XSS and CSRF?",
+        options: { a: "User education has no impact on security", b: "To increase the risk of successful attacks", c: "To help users recognize and avoid risky behaviors that may lead to compromised authentication", d: "To slow down the authentication process" },
+        correct: "c",
+        co_rbt: "CO4, L3",
+        exp: {
+            correct: "Educating users teaches them to spot suspicious links, avoid untrusted sites, and recognize phishing attempts that abuse active web sessions.",
+            others: [
+                "<b>(a) User education has no impact...:</b> False, human choices remain one of the most critical security layers in any organization.",
+                "<b>(b) To increase the risk...:</b> Security teams train users to lower attack risks, not increase them.",
+                "<b>(d) To slow down authentication:</b> Training aims to protect credentials without adding friction or slowing down business workflows."
+            ]
+        }
+    },
+    {
+        num: 48,
+        text: "After a penetration test is complete what should you do next when you are conducting the post-engagement cleanup process.",
+        options: { a: "Ask the client to sign an agreement not to disclose the techniques you used during the test", b: "Remove any tester-created credentials used during the test", c: "Write a critique of the mistakes the internal administrators made during the test", d: "Obscure everything you did during the test from the client" },
+        correct: "b",
+        co_rbt: "CO6, L4",
+        exp: {
+            correct: "Testers must clean up after an engagement by removing any temporary user profiles, credentials, or backdoors created during the test to ensure they aren't exploited later.",
+            others: [
+                "<b>(a) Ask the client to sign an agreement...:</b> Intellectual property rules are outlined in the initial MSA contract, not during cleanup.",
+                "<b>(c) Write a critique of mistakes...:</b> Professional reports focus on objective findings, risk levels, and remediation steps rather than personal criticism.",
+                "<b>(d) Obscure everything you did:</b> Hiding testing steps violates transparency guidelines and makes it impossible for the client to replicate and patch the flaws."
+            ]
+        }
+    },
+    {
+        num: 49,
+        text: "Which type of privilege escalation attack typically requires an attacker to have physical access to the target machine?",
+        options: { a: "Vertical privilege escalation", b: "Local privilege escalation", c: "Horizontal privilege escalation", d: "Remote privilege escalation" },
+        correct: "b",
+        co_rbt: "CO5, L3",
+        exp: {
+            correct: "Local privilege escalation exploits assume the attacker already has direct physical access or an interactive local session on the machine to interact with its hardware and files.",
+            others: [
+                "<b>(a) Vertical privilege escalation:</b> Moving from low user access to administrative root privileges, often done remotely over a network connection.",
+                "<b>(c) Horizontal privilege escalation:</b> Moving laterally between peer accounts with identical privileges, requiring no physical presence.",
+                "<b>(d) Remote privilege escalation:</b> Upgrading privileges across a network connection without needing physical contact with the hardware."
+            ]
+        }
+    },
+    {
+        num: 50,
+        text: "A penetration tester ran a ping command during an unknown environment test, and it returned a 128 TTL packet. Which of the following OSs would MOST likely return a packet of this type?",
+        options: { a: "Windows", b: "Apple", c: "Linux", d: "Android" },
+        correct: "a",
+        co_rbt: "CO5, L2",
+        exp: {
+            correct: "Microsoft Windows operating systems default to an initial Time-to-Live (TTL) value of 128 for outbound ICMP network packets.",
+            others: [
+                "<b>(b) Apple / (c) Linux / (d) Android:</b> Unix and Linux-derived operating system kernels default to a standard base value of 64 for outgoing IP packets."
+            ]
+        }
+    },
+    {
+        num: 51,
+        text: "Which of the following types of XSS occurs when malicious script is stored on the server and served to other users?",
+        options: { a: "Reflected XSS", b: "Stored XSS", c: "DOM-based XSS", d: "Self XSS" },
+        correct: "b",
+        co_rbt: "CO4, L1",
+        exp: {
+            correct: "Stored XSS (Persistent XSS) happens when a malicious payload is saved directly into a database or server file, running automatically whenever other users load the infected page.",
+            others: [
+                "<b>(a) Reflected XSS:</b> Non-persistent script that bounces off a web form input, requiring the victim to click a specially crafted malicious link.",
+                "<b>(c) DOM-based XSS:</b> The vulnerability exists entirely in client-side JavaScript source code, modifying local browser runtime objects without changing server data.",
+                "<b>(d) Self XSS:</b> A social engineering trick where users are convinced to paste malicious script code directly into their own developer consoles."
+            ]
+        }
+    },
+    {
+        num: 52,
+        text: "Which of the following is NOT a common audience for penetration testing reports? (Duplicate Question Variant)",
+        options: { a: "Board of Directors", b: "IT administrators", c: "General public", d: "Legal counsel" },
+        correct: "c",
+        co_rbt: "CO6, L3",
+        exp: {
+            correct: "Penetration test summaries outline sensitive internal security weaknesses and should never be exposed to the public.",
+            others: [
+                "<b>(a), (b), and (d):</b> These are all internal stakeholders who rely on the report to assess liabilities, allocate security budget, or patch systems."
+            ]
+        }
+    },
+    {
+        num: 53,
+        text: "You are assessing the results of a vulnerability scan and have noticed a common theme. You have found that almost all of the target organization's Windows Server 2012 R2 systems are missing the same critical security updates. What should you do?",
+        options: { a: "Halt the penetration test and inform the client immediately.", b: "Investigate whether this creates any vulnerabilities that you could exploit.", c: "Install the missing updates on the servers.", d: "Document the missing updates on your penetration testing best practices blog." },
+        correct: "b",
+        co_rbt: "CO3, L3",
+        exp: {
+            correct: "The job of a penetration tester is to confirm vulnerabilities by finding working exploit paths, which requires verifying if missing patches can be successfully exploited.",
+            others: [
+                "<b>(a) Halt the penetration test...:</b> Testing is only paused for extreme, high-risk conditions, like discovering an active real-world malware breach.",
+                "<b>(c) Install the missing updates:</b> Remediation and patch installation is strictly the responsibility of the client's internal IT operations team.",
+                "<b>(d) Document the missing updates on a blog:</b> Sharing client infrastructure details on a public blog breaches critical non-disclosure agreements (NDAs)."
+            ]
+        }
+    },
+    {
+        num: 54,
+        text: "A security researcher has to scan for active hosts in an organization. Which of the following commands will used by him/her?",
+        options: { a: "Nmap <ip address> -sS", b: "Nmap <starting ip address> <ending ip address>", c: "Nmap <ip address> -sL", d: "Nmap <ip address> -sP" },
+        correct: "d",
+        co_rbt: "CO4, L3",
+        exp: {
+            correct: "The `-sP` option (or `-sn` in modern versions) performs a ping sweep across specified IP scopes to discover active hosts without scanning their individual ports.",
+            others: [
+                "<b>(a) -sS:</b> Launches an active port scan, which takes much longer than a simple up/down host discovery check.",
+                "<b>(b) Un-flagged range:</b> Scans the entire 1,000 default port group on every IP address, which creates too much network noise during discovery.",
+                "<b>(c) -sL:</b> Simply parses target arrays and prints a list of targets without sending any packets to the remote systems."
+            ]
+        }
+    },
+    {
+        num: 55,
+        text: "Which of the following is NOT a phase of the penetration testing process?",
+        options: { a: "Planning", b: "Scanning", c: "Enumeration", d: "Analysis" },
+        correct: "d",
+        co_rbt: "L6",
+        exp: {
+            correct: "While analysis happens throughout an assessment, it is an analytical task rather than a distinct, formal operational phase within standard methodology models like PTES or NIST.",
+            others: [
+                "<b>(a) Planning:</b> The foundational phase defining rules, scopes, boundaries, and legal contracts.",
+                "<b>(b) Scanning:</b> Active network probing to locate active targets, systems, and open ports.",
+                "<b>(c) Enumeration:</b> Interrogating open ports to map out user accounts, exact application versions, and system shares."
+            ]
+        }
+    },
+    {
+        num: 56,
+        text: "A hacker creates a webpage with an invisible login button placed over another website's login button, tricking users into clicking it. What is this attack called?",
+        options: { a: "Cross-Site Scripting (XSS)", b: "Clickjacking", c: "Brute Force Attack", d: "Session Hijacking" },
+        correct: "b",
+        co_rbt: "CO4, L3",
+        exp: {
+            correct: "Clickjacking uses transparent iframe layers to trick users into clicking hidden buttons on an underlying page, hijacking their intended actions.",
+            others: [
+                "<b>(a) Cross-Site Scripting:</b> Injects executable script code into a browser context to steal cookies, not transparent layers.",
+                "<b>(c) Brute Force Attack:</b> Automatically guesses passwords one by one to break logins.",
+                "<b>(d) Session Hijacking:</b> Steals or intercepts active session tokens to bypass user authentication completely."
+            ]
+        }
+    },
+    {
+        num: 57,
+        text: "You are a penetration tester, and you are looking to cross-compile code for your penetration activity. Then you plan to deploy it. Why would you cross-compile code?",
+        options: { a: "To add additional libraries", b: "To allow you to inspect the source code", c: "To run it on multiple platforms", d: "To run it on different architectures" },
+        correct: "d",
+        co_rbt: "CO3, L2",
+        exp: {
+            correct: "Cross-compilation allows you to build an executable file on your own system architecture (like an x86_64 laptop) that is designed to run on a completely different target architecture (like an ARM-based IoT device).",
+            others: [
+                "<b>(a) To add additional libraries:</b> Handled by linkers and compilation configurations, not by changing target build engines.",
+                "<b>(b) To allow you to inspect code:</b> Code inspection requires viewable source files or decompilers, completely unrelated to where code compiles.",
+                "<b>(c) To run it on multiple platforms:</b> Cross-compiling creates a highly target-specific file layout rather than a single multi-platform binary."
+            ]
+        }
+    },
+    {
+        num: 58,
+        text: "Which of the following tool is used for real-time traffic analysis and network intrusion detection?",
+        options: { a: "John the Ripper", b: "L0phtCrack", c: "Snort", d: "Nessus" },
+        correct: "c",
+        co_rbt: "CO4, L2",
+        exp: {
+            correct: "Snort is an open-source Network Intrusion Detection System (NIDS) that analyzes packet traffic in real time to flag malicious activity based on defined rules.",
+            others: [
+                "<b>(a) John the Ripper / (b) L0phtCrack:</b> Specialized tools used offline to crack password hashes using dictionaries.",
+                "<b>(d) Nessus:</b> An automated remote vulnerability assessment platform, not a live traffic engine."
+            ]
+        }
+    },
+    {
+        num: 59,
+        text: "Determine Which of the following could be a tool used for information gathering?",
+        options: { a: "Dirbuster", b: "LOIC", c: "Recon-ng", d: "None of the above" },
+        correct: "c",
+        co_rbt: "CO1, L4",
+        exp: {
+            correct: "Recon-ng is a dedicated web reconnaissance framework built to collect open-source intelligence (OSINT) about target organizations.",
+            others: [
+                "<b>(a) Dirbuster:</b> Used during active scanning to discover hidden files and folders by brute-forcing directory lists, not for general info gathering.",
+                "<b>(b) LOIC:</b> Low Orbit Ion Cannon is a basic packet flood utility used to launch Denial of Service (DoS) attacks."
+            ]
+        }
+    },
+    {
+        num: 60,
+        text: "Which threat actor is most likely to be motivated by a desire to gain attention?",
+        options: { a: "Malicious insider", b: "Script kiddie", c: "Organized crime", d: "Nation-state" },
+        correct: "b",
+        co_rbt: "L3",
+        exp: {
+            correct: "Script kiddies are low-skilled individuals who use existing tools to deface websites or launch basic attacks, often motivated by internet notoriety and bragging rights.",
+            others: [
+                "<b>(a) Malicious insider:</b> Driven primarily by personal revenge, work grievances, or financial theft.",
+                "<b>(c) Organized crime:</b> Focused purely on financial profit through extortion, ransomware, and identity theft data loops.",
+                "<b>(d) Nation-state:</b> Highly advanced military or intelligence groups focused entirely on long-term political espionage and disruption."
+            ]
+        }
+    }
+];
+
+let correctCount = 0;
+let wrongCount = 0;
+let totalScore = 0;
+const answeredQuestions = new Set();
+
+function buildQuiz() {
+    const container = document.getElementById('quiz-container');
+    
+    questionsData.forEach((q) => {
+        const card = document.createElement('div');
+        card.className = 'question-card';
+        card.id = `q-card-${q.num}`;
+        
+        let optionsHTML = '';
+        for (const [key, val] of Object.entries(q.options)) {
+            optionsHTML += `
+                <li class="option-item">
+                    <button class="option-btn" data-qnum="${q.num}" data-opt="${key}" onclick="checkAnswer(${q.num}, '${key}')">
+                        <strong>(${key.toUpperCase()})</strong> ${val}
+                    </button>
+                </li>
+            `;
+        }
+        
+        // Render explicit details loop
+        let wrongOptionsHTML = q.exp.others.map(item => `<li>${item}</li>`).join('');
+        
+        card.innerHTML = `
+            <div class="question-num">Question ${q.num} <span style="float:right; font-weight:normal; color:#7f8c8d; font-size:0.85rem;">[${q.co_rbt}]</span></div>
+            <div class="question-text">${q.text}</div>
+            <ul class="options-list">${optionsHTML}</ul>
+            <div class="explanation-box" id="exp-${q.num}">
+                <h4>🎯 Masterclass Breakdown</h4>
+                <div class="explanation-section">
+                    <strong>Why Option (${q.correct.toUpperCase()}) is Correct:</strong>
+                    <p style="margin: 0.3rem 0; padding-left: 5px; border-left: 3px solid var(--success); font-style: italic;">${q.exp.correct}</p>
+                </div>
+                <div class="explanation-section" style="margin-top: 1rem;">
+                    <strong>Why the Alternative Options are Incorrect:</strong>
+                    <ul>${wrongOptionsHTML}</ul>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(card);
+    });
+}
+
+function checkAnswer(qNum, selectedOpt) {
+    if (answeredQuestions.has(qNum)) return;
+    answeredQuestions.add(qNum);
+    
+    const q = questionsData.find(item => item.num === qNum);
+    const card = document.getElementById(`q-card-${qNum}`);
+    const expBox = document.getElementById(`exp-${qNum}`);
+    const buttons = card.querySelectorAll('.option-btn');
+    
+    buttons.forEach(btn => btn.disabled = true);
+    
+    if (selectedOpt === q.correct) {
+        correctCount++;
+        totalScore += 1;
+        card.classList.add('correct');
+        card.querySelector(`[data-opt="${selectedOpt}"]`).classList.add('selected-correct');
+    } else {
+        wrongCount++;
+        card.classList.add('wrong');
+        card.querySelector(`[data-opt="${selectedOpt}"]`).classList.add('selected-wrong');
+        card.querySelector(`[data-opt="${q.correct}"]`).classList.add('show-correct');
+    }
+    
+    // Update live report stats
+    const totalAnswered = correctCount + wrongCount;
+    const accuracyRate = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
+    
+    document.getElementById('card-progress').innerText = `${totalAnswered} / 60`;
+    document.getElementById('card-correct').innerText = correctCount;
+    document.getElementById('card-wrong').innerText = wrongCount;
+    document.getElementById('card-score').innerText = `${totalScore} / 60`;
+    document.getElementById('card-accuracy').innerText = `${accuracyRate}%`;
+    
+    // Instant reveal block
+    expBox.style.display = 'block';
+}
+
+window.onload = buildQuiz;
+</script>
+
+</body>
+</html>
